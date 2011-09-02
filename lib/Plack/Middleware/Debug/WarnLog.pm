@@ -6,26 +6,30 @@ use parent qw(Plack::Middleware::Debug::Base);
 use strict;
 use warnings;
 
+use Plack::Middleware::WarnStash;
+
 our $VERSION = '0.001';
 
 sub run {
     my($self, $env, $panel) = @_;
 
+    my $warn_key = Plack::Middleware::WarnStash::warn_key();
+
     return sub{
         my $res = shift;
 
-        $env->{warnings} ||= [];
+        $env->{$warn_key} ||= [];
 
-        my $plural = (@{$env->{warnings}} != 1) ? 's' : '';
-        my $count = scalar @{$env->{warnings}} || 'No';
+        my $plural = (@{$env->{$warn_key}} != 1) ? 's' : '';
+        my $count = scalar @{$env->{$warn_key}} || 'No';
         my $subtitle = sprintf('%s warning%s', $count, $plural);
 
         $panel->nav_title('Warnings');
         $panel->nav_subtitle($subtitle);
-        $panel->content($self->render_lines($env->{warnings}));
+        $panel->content($self->render_lines($env->{$warn_key}));
 
         # Just so it doesn't also show up in the 'Environment' panel
-        delete $env->{warnings};
+        delete $env->{$warn_key};
     };
 }
 
